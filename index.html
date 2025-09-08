@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="en">
+
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>DAN’s Homeopathy AI</title>
+        <script src="https://cdn.tailwindcss.com"></script>
+    </head>
+
+    <body class="bg-gray-100 font-sans">
+        <div class="container mx-auto p-4">
+            <h1 class="text-3xl font-bold mb-4">DAN’s Homeopathy AI (Cara-Inspired)</h1>
+            <div class="mb-4">
+                <label for="symptoms" class="block text-lg">Enter Symptoms (e.g., "despair recovery" or "throbbing
+                    headache"):</label>
+                <input id="symptoms" type="text" class="w-full p-2 border rounded" placeholder="Type symptoms here...">
+                <button onclick="searchRemedies()"
+                    class="mt-2 bg-blue-500 text-white p-2 rounded hover:bg-blue-600">Search</button>
+            </div>
+            <div id="results" class="bg-white p-4 rounded shadow"></div>
+        </div>
+
+        <script>
+            // Load JSON data (inline for demo; replace with fetch('/homeopathy_remedies_cara.json') for production)
+            const remediesData = {
+                "remedies": [{
+                        "name": "Aurum muriaticum",
+                        "rubrics": ["Mind, despair, recovery, of", "Head, pain, pressing, vertex, night",
+                            "Generalities, weakness, walking, after"
+                        ],
+                        "notes": "Despair of recovery; pressing head pain at night; weak after walking; worse cold. Source: Kent.",
+                        "source": "Kent"
+                    },
+                    {
+                        "name": "Baptisia tinctoria",
+                        "rubrics": ["Mind, delusions, limbs separated from body", "Fever, septic, with stupor",
+                            "Stomach, sinking sensation"
+                        ],
+                        "notes": "Delusion body parts scattered; septic fever; sinking stomach; worse heat. Source: Boericke.",
+                        "source": "Boericke"
+                    },
+                    {
+                        "name": "Cicuta virosa",
+                        "rubrics": ["Mind, convulsions, from fright",
+                            "Head, bending backward during convulsions"
+                        ],
+                        "notes": "Convulsions triggered by fright; head jerks backward; worse touch. Source: Kent.",
+                        "source": "Kent"
+                    },
+                    {
+                        "name": "Clematis erecta",
+                        "rubrics": ["Skin, eruptions, vesicular, burning",
+                            "Urinary, urethra, burning during urination"
+                        ],
+                        "notes": "Burning vesicular eruptions; urethral pain; worse washing in cold. Source: Boericke.",
+                        "source": "Boericke"
+                    },
+                    {
+                        "name": "Colchicum autumnale",
+                        "rubrics": ["Stomach, nausea, smell of food agg.", "Extremities, gouty pain, joints"],
+                        "notes": "Nausea from food smells; gouty joint pain; worse motion, evening. Source: Kent.",
+                        "source": "Kent"
+                    },
+                    {
+                        "name": "Eupatorium perfoliatum",
+                        "rubrics": ["Generalities, bone pains, as if broken", "Fever, chills, thirst before"],
+                        "notes": "Bone-breaking pain; chills with thirst; worse cold air. Source: Boericke.",
+                        "source": "Boericke"
+                    },
+                    {
+                        "name": "Glonoinum",
+                        "rubrics": ["Head, pain, throbbing, sun exposure agg.",
+                            "Generalities, heat, sensation of, head"
+                        ],
+                        "notes": "Throbbing headache from sun; head heat; worse heat, motion. Source: Kent.",
+                        "source": "Kent"
+                    },
+                    {
+                        "name": "Hydrastis canadensis",
+                        "rubrics": ["Mouth, ulcers, tongue, with thick mucus",
+                            "Stomach, emptiness, not amel. by eating"
+                        ],
+                        "notes": "Tongue ulcers with mucus; empty stomach feeling; worse night. Source: Boericke.",
+                        "source": "Boericke"
+                    },
+                    {
+                        "name": "Kalmia latifolia",
+                        "rubrics": ["Heart, pain, shooting, to arm",
+                            "Extremities, neuralgia, worse right side"
+                        ],
+                        "notes": "Heart pain to arm; right-sided neuralgia; worse motion. Source: Kent.",
+                        "source": "Kent"
+                    },
+                    {
+                        "name": "Lac caninum",
+                        "rubrics": ["Mind, delusions, snakes in and around her",
+                            "Throat, pain, alternating sides"
+                        ],
+                        "notes": "Snake delusions; throat pain alternates sides; worse cold drinks. Source: Boericke.",
+                        "source": "Boericke"
+                    },
+                    {
+                        "name": "Ledum palustre",
+                        "rubrics": ["Extremities, punctured wounds, painful",
+                            "Generalities, coldness, yet desires cold"
+                        ],
+                        "notes": "Painful punctured wounds; cold feeling but better cold; worse warmth. Source: Kent.",
+                        "source": "Kent"
+                    },
+                    {
+                        "name": "Lilium tigrinum",
+                        "rubrics": ["Mind, hurry, with ineffectual urging to stool",
+                            "Female, bearing-down sensation"
+                        ],
+                        "notes": "Hurried with rectal urging; uterine prolapse sensation; worse heat. Source: Boericke.",
+                        "source": "Boericke"
+                    },
+                    {
+                        "name": "Muriaticum acidum",
+                        "rubrics": ["Mind, sadness, silent, morning",
+                            "Rectum, diarrhea, involuntary, typhoid, in"
+                        ],
+                        "notes": "Morning sadness; involuntary diarrhea in typhoid; worse heat. Source: Kent.",
+                        "source": "Kent"
+                    },
+                    {
+                        "name": "Natrum carbonicum",
+                        "rubrics": ["Mind, confusion, sun exposure, from",
+                            "Stomach, digestion, weak, after fruit"
+                        ],
+                        "notes": "Mental confusion in sun; weak digestion; worse heat, fruit. Source: Boericke.",
+                        "source": "Boericke"
+                    },
+                    {
+                        "name": "Petroleum",
+                        "rubrics": ["Skin, cracks, winter, in", "Mind, confusion, motion, on"],
+                        "notes": "Cracked skin in winter; motion-induced confusion; worse cold. Source: Kent.",
+                        "source": "Kent"
+                    },
+                    {
+                        "name": "Plumbum metallicum",
+                        "rubrics": ["Generalities, paralysis, gradual, of limbs", "Abdomen, retraction, navel"],
+                        "notes": "Gradual paralysis; retracted abdomen; worse night. Source: Boericke.",
+                        "source": "Boericke"
+                    },
+                    {
+                        "name": "Podophyllum",
+                        "rubrics": ["Rectum, diarrhea, gushing, morning", "Stomach, pain, before diarrhea"],
+                        "notes": "Morning gushing diarrhea; pain before stool; worse eating. Source: Kent.",
+                        "source": "Kent"
+                    },
+                    {
+                        "name": "Ranunculus bulbosus",
+                        "rubrics": ["Chest, pain, stitching, rainy weather agg.",
+                            "Skin, eruptions, vesicular, burning"
+                        ],
+                        "notes": "Stitching chest pain in rain; burning vesicles; worse wet weather. Source: Boericke.",
+                        "source": "Boericke"
+                    },
+                    {
+                        "name": "Rhododendron",
+                        "rubrics": ["Extremities, pain, worse before storm",
+                            "Generalities, sensitive, weather changes"
+                        ],
+                        "notes": "Joint pain before storms; weather sensitivity; worse cold, damp. Source: Kent.",
+                        "source": "Kent"
+                    },
+                    {
+                        "name": "Sabadilla",
+                        "rubrics": ["Nose, sneezing, violent, paroxysmal", "Mind, delusions, body shrunken"],
+                        "notes": "Violent sneezing; delusion body is shrunken; worse cold air. Source: Boericke.",
+                        "source": "Boericke"
+                    },
+                    {
+                        "name": "Sanguinaria canadensis",
+                        "rubrics": ["Head, pain, right-sided, periodical", "Respiration, asthma, worse night"],
+                        "notes": "Right-sided migraine; nocturnal asthma; better vomiting. Source: Kent.",
+                        "source": "Kent"
+                    },
+                    {
+                        "name": "Sepia succus",
+                        "rubrics": ["Mind, indifference, family, to", "Female, prolapse, uterus, bearing down"],
+                        "notes": "Indifference to family; uterine prolapse; better exercise. Source: Boericke.",
+                        "source": "Boericke"
+                    },
+                    {
+                        "name": "Spongia tosta",
+                        "rubrics": ["Larynx, cough, dry, barking, night",
+                            "Generalities, suffocation, sensation of"
+                        ],
+                        "notes": "Dry barking cough; suffocative feeling; worse night, warmth. Source: Kent.",
+                        "source": "Kent"
+                    },
+                    {
+                        "name": "Sticta pulmonaria",
+                        "rubrics": ["Nose, obstruction, night, dry", "Head, pain, frontal, with nasal catarrh"],
+                        "notes": "Nasal obstruction at night; frontal headache with cold; worse lying down. Source: Boericke.",
+                        "source": "Boericke"
+                    },
+                    {
+                        "name": "Sulphur iodatum",
+                        "rubrics": ["Skin, eruptions, acne, chronic", "Generalities, emaciation, rapid"],
+                        "notes": "Chronic acne; rapid wasting; worse heat. Source: Kent.",
+                        "source": "Kent"
+                    },
+                    {
+                        "name": "Taraxacum",
+                        "rubrics": ["Tongue, mapped, with bitterness", "Stomach, pain, pressing, after eating"],
+                        "notes": "Mapped tongue; bitter taste; stomach pain after meals; worse rest. Source: Boericke.",
+                        "source": "Boericke"
+                    },
+                    {
+                        "name": "Urtica urens",
+                        "rubrics": ["Skin, urticaria, burning, after scratching",
+                            "Generalities, rheumatism, alternating with urticaria"
+                        ],
+                        "notes": "Burning hives; rheumatism alternates with skin; worse cold, water. Source: Kent.",
+                        "source": "Kent"
+                    },
+                    {
+                        "name": "Valeriana officinalis",
+                        "rubrics": ["Mind, restlessness, night, tossing", "Generalities, spasms, hysterical"],
+                        "notes": "Restless tossing at night; hysterical spasms; worse evening. Source: Boericke.",
+                        "source": "Boericke"
+                    },
+                    {
+                        "name": "Xanthoxylum",
+                        "rubrics": ["Head, pain, neuralgic, left-sided",
+                            "Female, pain, ovarian, extending to thigh"
+                        ],
+                        "notes": "Left-sided neuralgia; ovarian pain to thigh; worse cold. Source: Kent.",
+                        "source": "Kent"
+                    },
+                    {
+                        "name": "Zizia aurea",
+                        "rubrics": ["Mind, excitement, nervous, menses, before",
+                            "Respiration, cough, dry, tickling, night"
+                        ],
+                        "notes": "Nervous excitement before menses; dry tickling cough; worse night. Source: Boericke.",
+                        "source": "Boericke"
+                    }
+                ]
+            };
+
+            // Simple TF-IDF-like scoring (JavaScript implementation)
+            function computeTFIDF(text, corpus) {
+                const words = text.toLowerCase().split(/\W+/).filter(w => w.length > 2);
+                const wordCount = {};
+                words.forEach(word => wordCount[word] = (wordCount[word] || 0) + 1);
+                const tf = Object.fromEntries(Object.entries(wordCount).map(([word, count]) => [word, count / words
+                    .length
+                ]));
+
+                const docCount = corpus.length;
+                const idf = {};
+                Object.keys(wordCount).forEach(word => {
+                    const docsWithWord = corpus.filter(doc => doc.toLowerCase().includes(word)).length;
+                    idf[word] = Math.log(docCount / (1 + docsWithWord));
+                });
+
+                return Object.fromEntries(Object.entries(tf).map(([word, score]) => [word, score * (idf[word] || 1)]));
+            }
+
+            // Cosine similarity between two vectors
+            function cosineSimilarity(vecA, vecB) {
+                const keys = new Set([...Object.keys(vecA), ...Object.keys(vecB)]);
+                let dotProduct = 0,
+                    normA = 0,
+                    normB = 0;
+                keys.forEach(key => {
+                    const a = vecA[key] || 0,
+                        b = vecB[key] || 0;
+                    dotProduct += a * b;
+                    normA += a * a;
+                    normB += b * b;
+                });
+                return dotProduct / (Math.sqrt(normA) * Math.sqrt(normB)) || 0;
+            }
+
+            // Search and analyze remedies
+            function searchRemedies() {
+                const query = document.getElementById('symptoms').value.trim();
+                if (!query) {
+                    document.getElementById('results').innerHTML = '<p class="text-red-500">Please enter symptoms!</p>';
+                    return;
+                }
+
+                // Compute TF-IDF for query
+                const queryVector = computeTFIDF(query, remediesData.remedies.flatMap(r => [...r.rubrics, r.notes]));
+
+                // Score remedies
+                const remedyScores = {};
+                remediesData.remedies.forEach(remedy => {
+                    remedy.rubrics.forEach(rubric => {
+                        const rubricVector = computeTFIDF(rubric, remediesData.remedies.flatMap(r => [
+                            ...r.rubrics, r.notes
+                        ]));
+                        const similarity = cosineSimilarity(queryVector, rubricVector);
+                        if (!remedyScores[remedy.name]) {
+                            remedyScores[remedy.name] = {
+                                score: 0,
+                                rubrics: [],
+                                notes: remedy.notes,
+                                match_count: 0
+                            };
+                        }
+                        remedyScores[remedy.name].score += similarity * (3 / 3); // Assume grade 3
+                        remedyScores[remedy.name].rubrics.push(rubric);
+                        remedyScores[remedy.name].match_count += 1;
+                    });
+                    // Boost for notes match
+                    const notesVector = computeTFIDF(remedy.notes, remediesData.remedies.flatMap(r => [...r
+                        .rubrics, r.notes
+                    ]));
+                    const notesSimilarity = cosineSimilarity(queryVector, notesVector);
+                    remedyScores[remedy.name].score += notesSimilarity * 0.5; // Lower weight for notes
+                });
+
+                // Boost for multiple rubric matches (like Cara's repertorization)
+                const recommendations = Object.entries(remedyScores).map(([name, data]) => ({
+                    remedy: name,
+                    score: data.score * (1 + 0.3 * (data.match_count - 1)),
+                    rubrics: data.rubrics,
+                    notes: data.notes
+                })).sort((a, b) => b.score - a.score).slice(0, 5);
+
+                // Display results
+                let html = '<h2 class="text-xl font-bold mb-2">Recommended Remedies:</h2>';
+                if (recommendations.length === 0) {
+                    html += '<p>No matches found.</p>';
+                } else {
+                    recommendations.forEach(rec => {
+                        html += `
+            <div class="mb-4">
+              <p><strong>${rec.remedy}</strong> (Score: ${rec.score.toFixed(2)})</p>
+              <p><strong>Rubrics:</strong> ${rec.rubrics.join(', ')}</p>
+              <p><strong>Notes:</strong> ${rec.notes}</p>
+            </div>
+          `;
+                    });
+                }
+                document.getElementById('results').innerHTML = html;
+            }
+        </script>
+    </body>
+
+</html>
+
+<!-- updated -->
